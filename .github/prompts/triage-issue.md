@@ -31,8 +31,7 @@ Lee `.github/labels.json`. Ese archivo es la **lista cerrada** de labels permiti
 
 - No inventes labels. No uses ninguno que no este en ese archivo.
 - No crees labels nuevos (`gh label create` esta prohibido aqui).
-- Si crees que falta un label en la taxonomia, dilo en la seccion de notas del
-  comentario; no lo crees.
+- Si crees que falta un label en la taxonomia, dilo en "Riesgos" del comentario; no lo crees.
 
 Reglas de cardinalidad:
 
@@ -124,53 +123,44 @@ gh api "repos/$GITHUB_REPOSITORY/issues/<numero>/comments" --paginate \
 
 **Nunca publiques un segundo comentario de diagnostico en el mismo issue.** Si por
 cualquier razon encuentras mas de uno, actualiza el mas antiguo y menciona el duplicado
-en las notas.
+en "Riesgos".
 
 ### 4c. Plantilla del comentario
+
+Se breve: el comentario entero deberia caber en pantalla (~25 lineas). Una idea por linea,
+sin relleno y sin repetir lo que ya dice el issue. Cita codigo real, no lo parafrasees.
 
 ```markdown
 <!-- claude-triage:v1 -->
 ## Diagnostico automatico
 
-**Resumen**
-Una o dos frases: que pasa y por que importa.
+**Que pasa** — una frase. Actual: ... / Esperado: ...
 
-**Comportamiento actual vs. esperado**
-- Actual: ...
-- Esperado: ...
-
-**Componentes afectados**
-- `game.js:123` — `nombreDeLaFuncion()`: que hace hoy y por que es relevante.
+**Donde**
+- `game.js:123` `nombreDeLaFuncion()` — por que es relevante (una linea).
 - `index.html:42` — ...
 
-**Causa probable**
-Explicacion tecnica concreta, apoyada en el codigo que leiste. Si no estas seguro,
-di explicitamente que es una hipotesis y que haria falta para confirmarla.
+**Causa probable** — explicacion tecnica apoyada en el codigo que leiste. Si no estas
+seguro, di "hipotesis" y que haria falta para confirmarla.
 
-**Enfoque propuesto**
-1. Paso concreto y accionable (archivo + funcion + que cambiar).
+**Enfoque**
+1. Archivo + funcion + que cambiar.
 2. ...
-3. ...
 
-**Criterios de aceptacion**
-- [ ] Comprobacion manual verificable abriendo `index.html` y jugando.
-- [ ] ...
+**Aceptacion**
+- [ ] Comprobacion manual abriendo `index.html` y jugando.
 
-**Riesgos y gotchas**
-Invariantes de `CLAUDE.md` que este cambio podria romper (ver lista abajo). Si no aplica
-ninguno, escribe "Ninguno relevante".
+**Riesgos** — gotchas de `CLAUDE.md` que toca este cambio, o "Ninguno relevante".
 
-**Prioridad y esfuerzo**
-`prioridad: X` porque ... / `esfuerzo: Y` porque ...
+`prioridad: X` porque ... · `esfuerzo: Y` porque ...
 
 ---
-Para implementar esto, comenta en el issue:
-`@claude implementa el enfoque propuesto en el diagnostico`
+Para implementar: comenta `@claude implementa el enfoque propuesto en el diagnostico`
 ```
 
 ### 4d. Gotchas que SIEMPRE debes revisar antes de proponer un enfoque
 
-Estos son invariantes reales del repo. Si tu propuesta los toca, dilo en "Riesgos y gotchas":
+Estos son invariantes reales del repo. Si tu propuesta los toca, dilo en "Riesgos":
 
 1. `COLS`, `ROWS` y `BLOCK` en `game.js` deben seguir cuadrando con los atributos
    `width`/`height` del `<canvas id="board">` en `index.html` (`COLS*BLOCK` x `ROWS*BLOCK`,
@@ -196,9 +186,9 @@ funciona", sin pasos ni descripcion):
 - Aplica `necesita-info` y el `tipo:` y `area:` que puedas inferir.
 - **No** apliques `triage: listo`.
 - No apliques `prioridad:` ni `esfuerzo:` si no tienes base para estimarlos.
-- En el comentario, sustituye las secciones de diagnostico por una lista corta y concreta
-  de **exactamente que datos faltan** (pasos para reproducir, navegador, que se esperaba,
-  captura, si ocurre siempre o a veces).
+- En el comentario deja solo el marcador, el titulo y una lista de **exactamente que datos
+  faltan** (pasos para reproducir, navegador, que se esperaba, captura, si ocurre siempre o
+  a veces). Nada mas: sin secciones vacias ni diagnostico especulativo.
 
 ---
 
