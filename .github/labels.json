@@ -1,0 +1,26 @@
+[
+  { "name": "tipo: bug",          "color": "d73a4a", "description": "Algo no funciona como deberia" },
+  { "name": "tipo: feature",      "color": "0e8a16", "description": "Funcionalidad nueva" },
+  { "name": "tipo: mejora",       "color": "1d76db", "description": "Mejora de algo que ya existe" },
+  { "name": "tipo: refactor",     "color": "5319e7", "description": "Cambio interno sin alterar el comportamiento" },
+  { "name": "tipo: docs",         "color": "0075ca", "description": "README, comentarios o CLAUDE.md" },
+  { "name": "tipo: pregunta",     "color": "d876e3", "description": "Duda o soporte, no requiere codigo" },
+
+  { "name": "area: gameplay",     "color": "fbca04", "description": "Piezas, rotacion, colision, lineas, nivel y velocidad" },
+  { "name": "area: render",       "color": "f9d0c4", "description": "Canvas, drawBlock, drawNext, pieza fantasma" },
+  { "name": "area: controles",    "color": "c2e0c6", "description": "Teclado, pausa, reinicio, bucle de juego" },
+  { "name": "area: hud",          "color": "bfd4f2", "description": "Score, nivel, lineas y updateHUD" },
+  { "name": "area: estilos",      "color": "e99695", "description": "style.css e index.html, layout y aspecto" },
+  { "name": "area: ci",           "color": "ededed", "description": "Workflows de GitHub Actions y automatizacion" },
+
+  { "name": "prioridad: alta",    "color": "b60205", "description": "Rompe el juego o bloquea el uso normal" },
+  { "name": "prioridad: media",   "color": "fbca04", "description": "Molesto pero hay forma de seguir jugando" },
+  { "name": "prioridad: baja",    "color": "c5def5", "description": "Detalle menor o mejora opcional" },
+
+  { "name": "esfuerzo: bajo",     "color": "c5def5", "description": "Cambio localizado en pocas lineas" },
+  { "name": "esfuerzo: medio",    "color": "fef2c0", "description": "Toca varias funciones o archivos" },
+  { "name": "esfuerzo: alto",     "color": "e11d21", "description": "Cambio estructural o de varios subsistemas" },
+
+  { "name": "necesita-info",      "color": "d4c5f9", "description": "Falta informacion para poder diagnosticar" },
+  { "name": "triage: listo",      "color": "0e8a16", "description": "Claude ya publico el diagnostico automatico" }
+]

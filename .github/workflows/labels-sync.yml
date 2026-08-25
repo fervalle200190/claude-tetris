@@ -1,0 +1,39 @@
+name: Sincronizar labels
+
+# Crea o actualiza en GitHub los labels definidos en .github/labels.json.
+# Es idempotente: se puede ejecutar todas las veces que haga falta.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/labels.json'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Crear o actualizar labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          jq -c '.[]' .github/labels.json | while read -r label; do
+            name=$(jq -r '.name'        <<<"$label")
+            color=$(jq -r '.color'      <<<"$label")
+            desc=$(jq -r '.description' <<<"$label")
+            # --force crea el label si no existe y actualiza color/descripcion si ya existe
+            gh label create "$name" --color "$color" --description "$desc" --force
+            echo "OK: $name"
+          done

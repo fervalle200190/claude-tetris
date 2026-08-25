@@ -1,0 +1,53 @@
+name: Claude Issue Triage
+
+# Al crear un issue, o al editar su titulo/cuerpo, Claude le aplica los labels de
+# .github/labels.json y publica (o actualiza) un comentario con el diagnostico.
+# Las instrucciones completas viven en .github/prompts/triage-issue.md.
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+# Ediciones seguidas del mismo issue no apilan ejecuciones: gana la ultima.
+concurrency:
+  group: triage-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    # No re-disparar por bots, y no pisarse con claude.yml cuando el issue menciona @claude.
+    if: >-
+      github.event.sender.type != 'Bot' &&
+      !contains(github.event.issue.body, '@claude') &&
+      !contains(github.event.issue.title, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Issue Triage
+        id: triage
+        uses: anthropics/claude-code-action@v1
+        env:
+          # gh dentro de Bash necesita el token de forma explicita.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Haz el triage del issue #${{ github.event.issue.number }} del repositorio ${{ github.repository }}.
+
+            Sigue al pie de la letra las instrucciones de .github/prompts/triage-issue.md.
+            Leelo primero, junto con CLAUDE.md y .github/labels.json, antes de hacer nada.
+
+            Recuerda: solo puedes aplicar labels y publicar o actualizar un unico comentario
+            de diagnostico. No modifiques codigo, no edites el issue, no abras PRs.
+          claude_args: >-
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob,Write,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh api:*)"
