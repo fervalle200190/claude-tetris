@@ -66,6 +66,7 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <div id="game-over-records"></div>
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>
@@ -91,10 +92,22 @@
         </div>
       </div>
     </div>
+
+    <div id="start-screen" class="overlay">
+      <div class="overlay-box">
+        <p class="start-title">TETRIS</p>
+        <div id="start-records"></div>
+        <div class="start-actions">
+          <button id="start-play-btn">JUGAR</button>
+          <button id="start-reset-btn">Resetear records</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="skins.js"></script>
   <script src="pause.js"></script>
+  <script src="records.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

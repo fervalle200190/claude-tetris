@@ -256,6 +256,8 @@ kbd {
 
 #skin-select:focus {
   outline: 1px solid var(--accent);
+}
+
 /* ---- Menú de pausa ---- */
 .pause-menu {
   position: absolute;
@@ -354,4 +356,150 @@ kbd {
   padding: 6px 8px;
   font-size: 13px;
   font-family: inherit;
+}
+
+/* ---- Records ---- */
+.start-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--title-color);
+}
+
+#start-records,
+#game-over-records {
+  width: 100%;
+}
+
+.records-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 200px;
+  margin: 0 auto;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.record-rank {
+  width: 16px;
+  color: var(--label-color);
+  font-size: 12px;
+}
+
+.record-nombre {
+  flex: 1;
+  text-align: left;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.record-score {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.record-vacio {
+  list-style: none;
+  color: var(--controls-text);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.record-destacado {
+  background: rgba(122, 162, 247, 0.18);
+  outline: 1px solid var(--accent);
+}
+
+body.light .record-destacado {
+  background: rgba(58, 95, 205, 0.12);
+}
+
+.records-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+.records-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.start-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.record-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+#player-name {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  width: 100px;
+}
+
+#player-name:focus {
+  outline: 1px solid var(--accent);
+}
+
+#start-play-btn,
+#save-record-btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+#start-play-btn:hover,
+#save-record-btn:hover {
+  background: #9bbdff;
+}
+
+#start-reset-btn {
+  background: transparent;
+  color: var(--controls-text);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+#start-reset-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
 }
