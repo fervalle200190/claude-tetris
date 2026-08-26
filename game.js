@@ -40,8 +40,12 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const startScreen = document.getElementById('start-screen');
+const startPlayBtn = document.getElementById('start-play-btn');
+const startResetBtn = document.getElementById('start-reset-btn');
+const gameOverRecords = document.getElementById('game-over-records');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, combo, maxCombo, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridColor = '#22222e';
 let blockHighlight = 'rgba(255,255,255,0.12)';
 
@@ -113,6 +117,7 @@ function clearLines() {
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
+  return cleared;
 }
 
 function ghostY() {
@@ -140,7 +145,13 @@ function softDrop() {
 
 function lockPiece() {
   merge();
-  clearLines();
+  const cleared = clearLines();
+  if (cleared) {
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+  } else {
+    combo = 0;
+  }
   spawn();
 }
 
@@ -226,7 +237,33 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  actualizarMejores({ combo: maxCombo, lineas: lines });
+  mostrarRecordsGameOver();
   overlay.classList.remove('hidden');
+}
+
+// Muestra el top de récords en el overlay de game over; si la puntuación
+// entra en el top 5, añade un formulario para guardar el nombre del jugador.
+function mostrarRecordsGameOver() {
+  renderRecords(gameOverRecords);
+  if (entraEnTop(score)) {
+    gameOverRecords.insertAdjacentHTML('beforeend', `
+      <div class="record-form">
+        <input id="player-name" type="text" maxlength="10" placeholder="Tu nombre" autocomplete="off">
+        <button id="save-record-btn">Guardar</button>
+      </div>
+    `);
+    const nombreInput = document.getElementById('player-name');
+    const guardar = () => {
+      const idx = guardarRecord({ nombre: nombreInput.value, score, lines, level });
+      renderRecords(gameOverRecords, idx);
+    };
+    document.getElementById('save-record-btn').addEventListener('click', guardar);
+    nombreInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') guardar();
+    });
+    nombreInput.focus();
+  }
 }
 
 function togglePause() {
@@ -264,6 +301,8 @@ function init() {
   score = 0;
   lines = 0;
   level = 1;
+  combo = 0;
+  maxCombo = 0;
   paused = false;
   gameOver = false;
   dropInterval = 1000;
@@ -278,6 +317,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -304,6 +344,30 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+startPlayBtn.addEventListener('click', () => {
+  startScreen.classList.add('hidden');
+  init();
+});
+
+let confirmandoReset = false;
+let resetConfirmTimeout = null;
+startResetBtn.addEventListener('click', () => {
+  if (!confirmandoReset) {
+    confirmandoReset = true;
+    startResetBtn.textContent = '¿Seguro?';
+    resetConfirmTimeout = setTimeout(() => {
+      confirmandoReset = false;
+      startResetBtn.textContent = 'Resetear records';
+    }, 3000);
+    return;
+  }
+  clearTimeout(resetConfirmTimeout);
+  confirmandoReset = false;
+  startResetBtn.textContent = 'Resetear records';
+  resetearRecords();
+  renderRecords(document.getElementById('start-records'));
+});
+
 function applyTheme(isLight) {
   document.body.classList.toggle('light', isLight);
   gridColor = isLight ? '#d0d0dc' : '#22222e';
@@ -321,4 +385,4 @@ themeToggle.addEventListener('change', () => {
 
 applyTheme(localStorage.getItem('theme') === 'light');
 
-init();
+renderRecords(document.getElementById('start-records'));
