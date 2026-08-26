@@ -310,6 +310,7 @@ function applyTheme(isLight) {
   blockHighlight = isLight ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
   themeToggle.checked = isLight;
   if (current) draw();
+  if (next) drawNext();
 }
 
 themeToggle.addEventListener('change', () => {
