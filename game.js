@@ -238,8 +238,8 @@ function endGame() {
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   actualizarMejores({ combo: maxCombo, lineas: lines });
-  mostrarRecordsGameOver();
   overlay.classList.remove('hidden');
+  mostrarRecordsGameOver();
 }
 
 // Muestra el top de récords en el overlay de game over; si la puntuación
@@ -267,7 +267,7 @@ function mostrarRecordsGameOver() {
 }
 
 function togglePause() {
-  if (gameOver) return;
+  if (!current || gameOver) return;
   paused = !paused;
   if (!paused) {
     lastTime = performance.now();
@@ -317,7 +317,8 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
+  if (e.target.id === 'player-name') return;
+  if (!current) return;
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {

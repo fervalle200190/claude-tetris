@@ -25,7 +25,7 @@ There is nothing to build, install, or test. Verification is manual: open the pa
 - **Loop**: `loop(ts)` accumulates `dt` into `dropAccum` and drops one row when it exceeds `dropInterval`, then redraws every frame. Pause/game-over work by `cancelAnimationFrame(animId)`, and resume re-seeds `lastTime = performance.now()` before restarting the loop — skip that and the first frame after a pause registers a huge `dt`.
 - **Level/speed**: derived in `clearLines()` only — `level = floor(lines/10)+1`, `dropInterval = max(100, 1000 - (level-1)*90)`.
 - **Rendering**: everything is redrawn from scratch each frame; `drawBlock` is shared by the board canvas and the `next` preview canvas, parameterized by cell size and alpha (ghost piece uses `0.2`).
-- **Reset**: `init()` is both the entry point and the restart handler — it reinitializes every global and is wired to `#restart-btn`.
+- **Reset**: `init()` reinitializes every global game-state variable and (re)starts the loop, but it is no longer called automatically on page load. `records.js`'s start screen (`#start-screen`) is shown first; `init()` only runs when the player clicks `#start-play-btn` (JUGAR) or `#restart-btn` (Reiniciar) after a game over. Until the first `init()` call, `current`/`board`/`paused`/`gameOver` are all `undefined` — the `keydown` handler and `togglePause()` guard against this with an explicit `if (!current) return;`.
 
 ## Gotchas
 
