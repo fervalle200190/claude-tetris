@@ -41,7 +41,7 @@ const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId, nivelBase;
 let gridColor = '#22222e';
 let blockHighlight = 'rgba(255,255,255,0.12)';
 let boardBg = '#1a1a25';
@@ -111,7 +111,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = Math.floor(lines / 10) + nivelBase;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
@@ -231,15 +231,15 @@ function endGame() {
 
 function togglePause() {
   if (gameOver) return;
+  if (typeof current === 'undefined' || !current) return;
   paused = !paused;
   if (!paused) {
+    cerrarMenuPausa();
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    abrirMenuPausa();
   }
 }
 
@@ -263,10 +263,14 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  // Se fija en una variable propia de la partida: si el nivel inicial se
+  // cambia desde el menú de pausa mientras se juega, no debe alterar la
+  // partida en curso, sólo la siguiente (ver clearLines()).
+  nivelBase = nivelInicial;
+  level = nivelBase;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -278,8 +282,20 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (paused || gameOver) {
+    // Con el menú de pausa abierto, si el foco NO está en uno de sus
+    // controles, evita que Space/flechas hagan scroll o disparen algo
+    // fuera del menú al volver al juego. Si el foco SÍ está dentro del
+    // menú (p. ej. el botón "Reanudar"), se deja pasar para que Space/Enter
+    // puedan activarlo con normalidad.
+    const focoEnMenu = pauseMenuEl && document.activeElement && pauseMenuEl.contains(document.activeElement);
+    if (paused && !focoEnMenu &&
+      (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
+      e.preventDefault();
+    }
+    return;
+  }
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
