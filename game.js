@@ -44,6 +44,8 @@ const themeToggle = document.getElementById('theme-toggle');
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridColor = '#22222e';
 let blockHighlight = 'rgba(255,255,255,0.12)';
+let boardBg = '#1a1a25';
+let nextBg = '#1a1a25';
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -161,14 +163,8 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = blockHighlight;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  const skin = SKINS[currentSkin] || SKINS.retro;
+  skin.drawBlock(context, x, y, colorIndex, size, alpha);
 }
 
 function drawGrid() {
@@ -190,6 +186,8 @@ function drawGrid() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = boardBg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid();
 
   // board
@@ -213,6 +211,8 @@ function draw() {
 function drawNext() {
   const NB = 30;
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  nextCtx.fillStyle = nextBg;
+  nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
@@ -306,11 +306,11 @@ restartBtn.addEventListener('click', init);
 
 function applyTheme(isLight) {
   document.body.classList.toggle('light', isLight);
-  gridColor = isLight ? '#d0d0dc' : '#22222e';
-  blockHighlight = isLight ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
   themeToggle.checked = isLight;
-  if (current) draw();
-  if (next) drawNext();
+  // gridColor, blockHighlight, boardBg y nextBg salen de la skin activa;
+  // refrescarVisual() (skins.js) es el punto único de refresco compartido
+  // con aplicarSkin() para no dejar el estado incoherente.
+  refrescarVisual();
 }
 
 themeToggle.addEventListener('change', () => {
