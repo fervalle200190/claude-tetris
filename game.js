@@ -4,17 +4,6 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#7986cb', // J - indigo
-  '#ffb74d', // L - orange
-];
-
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -40,10 +29,16 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggle = document.getElementById('theme-toggle');
+const startScreen = document.getElementById('start-screen');
+const startPlayBtn = document.getElementById('start-play-btn');
+const startResetBtn = document.getElementById('start-reset-btn');
+const gameOverRecords = document.getElementById('game-over-records');
 
-let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let board, current, next, score, lines, level, combo, maxCombo, paused, gameOver, lastTime, dropAccum, dropInterval, animId, nivelBase;
 let gridColor = '#22222e';
 let blockHighlight = 'rgba(255,255,255,0.12)';
+let boardBg = '#1a1a25';
+let nextBg = '#1a1a25';
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -109,10 +104,11 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = Math.floor(lines / 10) + nivelBase;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
+  return cleared;
 }
 
 function ghostY() {
@@ -140,7 +136,13 @@ function softDrop() {
 
 function lockPiece() {
   merge();
-  clearLines();
+  const cleared = clearLines();
+  if (cleared) {
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+  } else {
+    combo = 0;
+  }
   spawn();
 }
 
@@ -161,14 +163,8 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = blockHighlight;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  const skin = SKINS[currentSkin] || SKINS.retro;
+  skin.drawBlock(context, x, y, colorIndex, size, alpha);
 }
 
 function drawGrid() {
@@ -190,6 +186,8 @@ function drawGrid() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = boardBg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid();
 
   // board
@@ -213,6 +211,8 @@ function draw() {
 function drawNext() {
   const NB = 30;
   nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  nextCtx.fillStyle = nextBg;
+  nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
@@ -226,20 +226,45 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  actualizarMejores({ combo: maxCombo, lineas: lines });
   overlay.classList.remove('hidden');
+  mostrarRecordsGameOver();
+}
+
+// Muestra el top de récords en el overlay de game over; si la puntuación
+// entra en el top 5, añade un formulario para guardar el nombre del jugador.
+function mostrarRecordsGameOver() {
+  renderRecords(gameOverRecords);
+  if (entraEnTop(score)) {
+    gameOverRecords.insertAdjacentHTML('beforeend', `
+      <div class="record-form">
+        <input id="player-name" type="text" maxlength="10" placeholder="Tu nombre" autocomplete="off">
+        <button id="save-record-btn">Guardar</button>
+      </div>
+    `);
+    const nombreInput = document.getElementById('player-name');
+    const guardar = () => {
+      const idx = guardarRecord({ nombre: nombreInput.value, score, lines, level });
+      renderRecords(gameOverRecords, idx);
+    };
+    document.getElementById('save-record-btn').addEventListener('click', guardar);
+    nombreInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') guardar();
+    });
+    nombreInput.focus();
+  }
 }
 
 function togglePause() {
-  if (gameOver) return;
+  if (!current || gameOver) return;
   paused = !paused;
   if (!paused) {
+    cerrarMenuPausa();
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    abrirMenuPausa();
   }
 }
 
@@ -263,10 +288,16 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  // Se fija en una variable propia de la partida: si el nivel inicial se
+  // cambia desde el menú de pausa mientras se juega, no debe alterar la
+  // partida en curso, sólo la siguiente (ver clearLines()).
+  nivelBase = nivelInicial;
+  level = nivelBase;
+  combo = 0;
+  maxCombo = 0;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
@@ -278,8 +309,22 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.target.id === 'player-name') return;
+  if (!current) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (paused || gameOver) {
+    // Con el menú de pausa abierto, si el foco NO está en uno de sus
+    // controles, evita que Space/flechas hagan scroll o disparen algo
+    // fuera del menú al volver al juego. Si el foco SÍ está dentro del
+    // menú (p. ej. el botón "Reanudar"), se deja pasar para que Space/Enter
+    // puedan activarlo con normalidad.
+    const focoEnMenu = pauseMenuEl && document.activeElement && pauseMenuEl.contains(document.activeElement);
+    if (paused && !focoEnMenu &&
+      (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
+      e.preventDefault();
+    }
+    return;
+  }
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -304,13 +349,37 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+startPlayBtn.addEventListener('click', () => {
+  startScreen.classList.add('hidden');
+  init();
+});
+
+let confirmandoReset = false;
+let resetConfirmTimeout = null;
+startResetBtn.addEventListener('click', () => {
+  if (!confirmandoReset) {
+    confirmandoReset = true;
+    startResetBtn.textContent = '¿Seguro?';
+    resetConfirmTimeout = setTimeout(() => {
+      confirmandoReset = false;
+      startResetBtn.textContent = 'Resetear records';
+    }, 3000);
+    return;
+  }
+  clearTimeout(resetConfirmTimeout);
+  confirmandoReset = false;
+  startResetBtn.textContent = 'Resetear records';
+  resetearRecords();
+  renderRecords(document.getElementById('start-records'));
+});
+
 function applyTheme(isLight) {
   document.body.classList.toggle('light', isLight);
-  gridColor = isLight ? '#d0d0dc' : '#22222e';
-  blockHighlight = isLight ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
   themeToggle.checked = isLight;
-  if (current) draw();
-  if (next) drawNext();
+  // gridColor, blockHighlight, boardBg y nextBg salen de la skin activa;
+  // refrescarVisual() (skins.js) es el punto único de refresco compartido
+  // con aplicarSkin() para no dejar el estado incoherente.
+  refrescarVisual();
 }
 
 themeToggle.addEventListener('change', () => {
@@ -321,4 +390,4 @@ themeToggle.addEventListener('change', () => {
 
 applyTheme(localStorage.getItem('theme') === 'light');
 
-init();
+renderRecords(document.getElementById('start-records'));
